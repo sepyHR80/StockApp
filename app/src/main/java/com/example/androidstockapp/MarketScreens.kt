@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -45,6 +46,7 @@ internal fun MarketList(
     onQuery: ((String) -> Unit)? = null,
     watchlist: List<String> = emptyList(),
     onWatch: ((String) -> Unit)? = null,
+    bottomPadding: Dp,
 ) {
     val visibleQuotes = remember(quotes, query) {
         val term = query.trim()
@@ -53,11 +55,12 @@ internal fun MarketList(
         }
     }
     LazyColumn(
-        Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 14.dp),
+        contentPadding = PaddingValues(bottom = bottomPadding),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         item {
-            Column(Modifier.padding(top = 24.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.padding(top = 16.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 PageTitle(stringResource(title))
                 if (title == R.string.dashboard) {
                     Text(stringResource(R.string.market_overview), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -83,11 +86,11 @@ internal fun MarketList(
             Surface(
                 onClick = { onQuote(quote.symbol) },
                 color = colors.surface,
-                shape = panelShape,
+                shape = MaterialTheme.shapes.small,
                 border = BorderStroke(1.dp, colors.outlineVariant),
             ) {
                 Row(
-                    Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 12.dp, vertical = 8.dp),
+                    Modifier.fillMaxWidth().heightIn(min = 54.dp).padding(horizontal = 12.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -130,8 +133,8 @@ internal fun StockScreen(quote: DemoQuote, watching: Boolean, onBack: () -> Unit
     var range by rememberSaveable(quote.symbol) { mutableStateOf(ChartRange.Day) }
     var style by rememberSaveable(quote.symbol) { mutableStateOf(ChartStyle.Area) }
     Column(
-        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         BackButton(onBack)
         Row(
@@ -143,7 +146,9 @@ internal fun StockScreen(quote: DemoQuote, watching: Boolean, onBack: () -> Unit
                 PageTitle(quote.symbol)
                 Text(quote.name, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            OutlinedButton(onClick = onWatch) { Text(stringResource(if (watching) R.string.watching else R.string.watch)) }
+            OutlinedButton(onClick = onWatch, shape = MaterialTheme.shapes.medium) {
+                Text(stringResource(if (watching) R.string.watching else R.string.watch))
+            }
         }
         Text(formatPrice(quote.price), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         QuoteChange(quote)
@@ -156,7 +161,6 @@ internal fun StockScreen(quote: DemoQuote, watching: Boolean, onBack: () -> Unit
                     selected = range == option,
                     onClick = { range = option },
                     label = { Text(option.label) },
-                    shape = CircleShape,
                 )
             }
         }
@@ -166,7 +170,6 @@ internal fun StockScreen(quote: DemoQuote, watching: Boolean, onBack: () -> Unit
                     selected = style == option,
                     onClick = { style = option },
                     label = { Text(stringResource(option.label)) },
-                    shape = CircleShape,
                 )
             }
         }
@@ -176,12 +179,12 @@ internal fun StockScreen(quote: DemoQuote, watching: Boolean, onBack: () -> Unit
 
 @Composable
 internal fun MoreScreen(onSelect: (Boolean) -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         PageTitle(stringResource(R.string.more))
-        OutlinedButton(onClick = { onSelect(true) }, modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(onClick = { onSelect(true) }, Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium) {
             Text(stringResource(R.string.alerts))
         }
-        OutlinedButton(onClick = { onSelect(false) }, modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(onClick = { onSelect(false) }, Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium) {
             Text(stringResource(R.string.settings))
         }
     }
@@ -189,7 +192,7 @@ internal fun MoreScreen(onSelect: (Boolean) -> Unit) {
 
 @Composable
 internal fun PlaceholderScreen(@StringRes title: Int, onBack: (() -> Unit)?) {
-    Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (onBack != null) BackButton(onBack)
         PageTitle(stringResource(title))
         Text(stringResource(R.string.coming_soon), color = MaterialTheme.colorScheme.onSurfaceVariant)

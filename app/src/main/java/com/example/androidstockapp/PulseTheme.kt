@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -32,14 +31,14 @@ import androidx.compose.ui.unit.dp
 
 internal val gain = Color(0xFF59E89D)
 internal val loss = Color(0xFFFF8189)
-internal val panelShape = RoundedCornerShape(24.dp)
+internal val panelShape = RoundedCornerShape(16.dp)
 
 private val pulseShapes = Shapes(
-    extraSmall = RoundedCornerShape(12.dp),
-    small = RoundedCornerShape(16.dp),
-    medium = RoundedCornerShape(20.dp),
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(14.dp),
     large = panelShape,
-    extraLarge = RoundedCornerShape(32.dp),
+    extraLarge = RoundedCornerShape(22.dp),
 )
 
 private val pulseColors = darkColorScheme(
@@ -70,7 +69,7 @@ internal fun PulseTheme(content: @Composable () -> Unit) {
 internal fun PulseBrand(modifier: Modifier = Modifier) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         Box(
-            modifier = Modifier.size(40.dp).background(pulseGradient(), RoundedCornerShape(14.dp)),
+            modifier = Modifier.size(38.dp).background(pulseGradient(), MaterialTheme.shapes.small),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -102,11 +101,12 @@ internal fun PulsePanel(modifier: Modifier = Modifier, content: @Composable () -
 @Composable
 internal fun PulseButton(label: String, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
+    val shape = MaterialTheme.shapes.medium
     Button(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
-            .background(pulseGradient(), CircleShape),
-        shape = CircleShape,
+        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+            .background(pulseGradient(), shape),
+        shape = shape,
         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = colors.onPrimary),
     ) {
         Text(label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)

@@ -26,13 +26,13 @@ import androidx.compose.ui.unit.dp
 internal fun AccountScreen(onDemo: () -> Unit) {
     var signingUp by rememberSaveable { mutableStateOf(false) }
     Column(
-        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp),
+        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         PulseBrand()
         PulsePanel(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 PageTitle(stringResource(if (signingUp) R.string.create_account else R.string.welcome_back))
                 Text(
                     stringResource(R.string.account_demo_notice),
@@ -53,10 +53,10 @@ internal fun AccountScreen(onDemo: () -> Unit) {
                         shape = MaterialTheme.shapes.medium,
                     )
                 }
-                Button(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth()) {
+                Button(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium) {
                     Text(stringResource(if (signingUp) R.string.sign_up else R.string.sign_in))
                 }
-                OutlinedButton(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium) {
                     Text(stringResource(R.string.continue_with_google))
                 }
                 TextButton(onClick = { signingUp = !signingUp }, modifier = Modifier.fillMaxWidth()) {

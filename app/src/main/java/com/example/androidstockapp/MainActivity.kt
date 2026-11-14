@@ -8,8 +8,12 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -88,10 +93,22 @@ private fun PulseApp() {
         containerColor = colors.background,
         bottomBar = {
             if (showTabs) {
+                val shape = MaterialTheme.shapes.extraLarge
                 NavigationBar(
-                    modifier = Modifier.navigationBarsPadding().padding(horizontal = 12.dp, vertical = 6.dp)
-                        .clip(MaterialTheme.shapes.extraLarge),
-                    containerColor = colors.surface,
+                    modifier = Modifier.navigationBarsPadding().padding(horizontal = 10.dp, vertical = 4.dp)
+                        .clip(shape)
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(colors.surfaceVariant.copy(alpha = 0.90f), colors.surface.copy(alpha = 0.94f)),
+                            ),
+                        )
+                        .border(
+                            1.dp,
+                            Brush.verticalGradient(listOf(colors.outline.copy(alpha = 0.6f), colors.outlineVariant)),
+                            shape,
+                        ),
+                    containerColor = Color.Transparent,
+                    tonalElevation = 0.dp,
                     windowInsets = WindowInsets(0, 0, 0, 0),
                 ) {
                     for (tab in tabs) {
@@ -112,10 +129,22 @@ private fun PulseApp() {
             }
         },
     ) { padding ->
+        val listUnderBar = showTabs && screen in listOf(Screen.Dashboard, Screen.Markets, Screen.Watchlists)
+        val direction = LocalLayoutDirection.current
+        val bodyPadding = if (listUnderBar) {
+            PaddingValues(
+                start = padding.calculateStartPadding(direction),
+                top = padding.calculateTopPadding(),
+                end = padding.calculateEndPadding(direction),
+            )
+        } else {
+            padding
+        }
+        val listBottomPadding = padding.calculateBottomPadding() + 6.dp
         Box(
             Modifier.fillMaxSize()
                 .background(Brush.verticalGradient(listOf(Color(0xFF103431), colors.background, colors.background)))
-                .padding(padding).consumeWindowInsets(padding).safeDrawingPadding(),
+                .padding(bodyPadding).consumeWindowInsets(padding).safeDrawingPadding(),
             contentAlignment = Alignment.TopCenter,
         ) {
             Box(Modifier.widthIn(max = 540.dp).fillMaxWidth()) {
@@ -129,16 +158,17 @@ private fun PulseApp() {
                         Screen.Account -> AccountScreen { screen = Screen.Dashboard }
                         Screen.Dashboard -> MarketList(
                             title = screen.title, quotes = demoQuotes.take(9),
-                            onQuote = { detailSymbol = it },
+                            onQuote = { detailSymbol = it }, bottomPadding = listBottomPadding,
                         )
                         Screen.Markets -> MarketList(
                             title = screen.title, quotes = demoQuotes.drop(3),
                             onQuote = { detailSymbol = it }, query = query, onQuery = { query = it },
-                            watchlist = watchlist, onWatch = ::toggleWatch,
+                            watchlist = watchlist, onWatch = ::toggleWatch, bottomPadding = listBottomPadding,
                         )
                         Screen.Watchlists -> MarketList(
                             title = screen.title, quotes = demoQuotes.filter { it.symbol in watchlist },
                             onQuote = { detailSymbol = it }, watchlist = watchlist, onWatch = ::toggleWatch,
+                            bottomPadding = listBottomPadding,
                         )
                         Screen.More -> MoreScreen { alerts -> screen = if (alerts) Screen.Alerts else Screen.Settings }
                         Screen.Portfolio, Screen.Alerts, Screen.Settings ->

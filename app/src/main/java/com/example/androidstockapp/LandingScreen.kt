@@ -27,11 +27,11 @@ import androidx.compose.ui.unit.dp
 internal fun LandingScreen(onGetStarted: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Column(
-        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 14.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         PulseBrand()
-        Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Column(Modifier.semantics(mergeDescendants = true) { heading() }) {
                 val titleStyle = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold)
                 Text(stringResource(R.string.hero_title), style = titleStyle)
@@ -44,7 +44,7 @@ internal fun LandingScreen(onGetStarted: () -> Unit) {
             )
         }
         PulsePanel(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),

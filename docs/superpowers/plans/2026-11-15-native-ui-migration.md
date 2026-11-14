@@ -2,7 +2,7 @@
 
 ## Specification
 
-Recreate the stock prototype in the existing Android app. Preserve the Pulse branding, dark mint palette, screen hierarchy, mock market data, search, and chart controls. Keep the existing application ID and `minSdk 23`. Use one Kotlin app module with Jetpack Compose, Material 3, Android resources, and an Android back stack. Compile against stable Android SDK 37. Start with `targetSdk 36` to preserve the app’s runtime behavior while validating the migration on Android 16.
+Recreate the stock prototype in the existing Android app. Preserve the Pulse branding, dark mint palette, screen hierarchy, mock market data, search, and chart controls. Use rounded stock rows, cards, form fields, chart controls, buttons, and navigation surfaces. Keep the existing application ID and `minSdk 23`. Use one Kotlin app module with Jetpack Compose, Material 3, Android resources, and an Android back stack. Compile against stable Android SDK 37. Start with `targetSdk 36` to preserve the app’s runtime behavior while validating the migration on Android 16.
 
 The prototype has a landing page, sign-in and account-creation screens, dashboard, markets, stock detail, and four “Coming soon” routes for watchlists, portfolio, alerts, and settings. The account UI preserves its fields and modes and offers explicit demo access. The watch control updates a single watchlist for the current app session. Alerts and Settings are under More so the bottom bar has five destinations. Live prices, remote sign-in, cloud data, and notifications require separate integrations. Prices and historical series in this migration are simulated.
 
@@ -17,8 +17,8 @@ The prototype has a landing page, sign-in and account-creation screens, dashboar
 
 ## Execution and verification
 
-- [ ] Verify the wrapper checksum and install SDK 37. Build with `./gradlew :app:assembleDebug :app:lintDebug` before the merge review.
-- [ ] Keep navigation state restorable. Handle Back from stock detail by restoring its parent tab, and from the dashboard by returning through the account screen to landing.
-- [ ] Keep sample quote prices and the chart input deterministic. Read through the same quote model in the dashboard, markets, and detail. Draw the line, area, and candles in Compose and cache drawing geometry by size and selected series.
-- [ ] Install `app/build/outputs/apk/debug/app-debug.apk` on the Pixel 8 emulator. Check screen text and controls through Android accessibility. Inspect the chart and layout visually. Exercise a narrow viewport and increased font size if the emulator supports those overrides.
-- [ ] Confirm the app uses Kotlin and Android resources for its UI. Review `git diff --check` and ensure the temporary export is absent from the repository before pushing.
+- [x] Verify the wrapper checksum and install SDK 37. Build with `./gradlew :app:assembleDebug :app:lintDebug` before the merge review.
+- [x] Keep navigation state restorable. Handle Back from stock detail by restoring its parent tab, and from the dashboard by returning through the account screen to landing.
+- [x] Keep sample quote prices and the chart input deterministic. Read through the same quote model in the dashboard, markets, and detail. Draw the line, area, and candles in Compose and cache drawing geometry by size and selected series.
+- [x] Install `app/build/outputs/apk/debug/app-debug.apk` on the Pixel 8 emulator. Check screen text and controls through Android accessibility. Inspect the chart and layout visually. Exercise a 375 dp viewport and 130% font scale.
+- [x] Confirm the app uses Kotlin and Android resources for its UI. Review `git diff --check` and ensure the temporary export is absent from the repository before pushing.

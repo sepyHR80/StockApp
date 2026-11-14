@@ -1,0 +1,93 @@
+# Based on Penpot 2.19.1's docker/images/docker-compose.yaml.
+name: stockapp-penpot
+
+x-public: &public
+  PENPOT_PUBLIC_URI: http://localhost:${PENPOT_PORT:-9002}
+  PENPOT_FLAGS: disable-email-verification disable-secure-session-cookies disable-telemetry enable-registration enable-login-with-password enable-prepl-server disable-admin-console
+
+services:
+  frontend:
+    image: penpotapp/frontend:2.19.1
+    restart: "no"
+    mem_limit: 128m
+    cpus: 0.5
+    ports:
+      - "127.0.0.1:${PENPOT_PORT:-9002}:8080"
+    environment:
+      <<: *public
+      PENPOT_ADMIN_CONSOLE_URI: ''
+      PENPOT_BACKEND_URI: http://backend:6060
+      PENPOT_EXPORTER_URI: http://exporter:6061
+    volumes:
+      - assets:/opt/data/assets
+    depends_on: [backend, exporter]
+
+  backend:
+    image: penpotapp/backend:2.19.1
+    restart: "no"
+    mem_limit: 1g
+    cpus: 1.0
+    environment:
+      <<: *public
+      JAVA_TOOL_OPTIONS: -Xmx512m -XX:MaxMetaspaceSize=256m -XX:ActiveProcessorCount=1
+      PENPOT_SECRET_KEY: ${PENPOT_SECRET_KEY:?Run the bootstrap command in docs/design.md}
+      PENPOT_ADMIN_CONSOLE_URI: ''
+      PENPOT_DATABASE_URI: postgresql://postgres/penpot
+      PENPOT_DATABASE_USERNAME: penpot
+      PENPOT_DATABASE_PASSWORD: ${PENPOT_DB_PASSWORD:?Run the bootstrap command in docs/design.md}
+      PENPOT_REDIS_URI: redis://valkey/0
+      PENPOT_OBJECTS_STORAGE_BACKEND: fs
+      PENPOT_OBJECTS_STORAGE_FS_DIRECTORY: /opt/data/assets
+      PENPOT_TELEMETRY_ENABLED: "false"
+    volumes:
+      - assets:/opt/data/assets
+    depends_on:
+      postgres: {condition: service_healthy}
+      valkey: {condition: service_healthy}
+
+  exporter:
+    image: penpotapp/exporter:2.19.1
+    restart: "no"
+    mem_limit: 384m
+    cpus: 1.0
+    environment:
+      <<: *public
+      PENPOT_SECRET_KEY: ${PENPOT_SECRET_KEY:?Run the bootstrap command in docs/design.md}
+      PENPOT_INTERNAL_URI: http://frontend:8080
+      PENPOT_REDIS_URI: redis://valkey/0
+    depends_on:
+      valkey: {condition: service_healthy}
+
+  postgres:
+    image: postgres:15.18
+    restart: "no"
+    mem_limit: 256m
+    cpus: 0.5
+    stop_signal: SIGINT
+    environment:
+      POSTGRES_DB: penpot
+      POSTGRES_USER: penpot
+      POSTGRES_PASSWORD: ${PENPOT_DB_PASSWORD:?Run the bootstrap command in docs/design.md}
+      POSTGRES_INITDB_ARGS: --data-checksums
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "penpot"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+  valkey:
+    image: valkey/valkey:8.1.8
+    restart: "no"
+    mem_limit: 128m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  assets:
+  postgres:

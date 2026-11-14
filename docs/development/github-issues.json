@@ -1,0 +1,182 @@
+{
+  "A01": {
+    "number": 6,
+    "url": "https://github.com/sepyHR80/StockApp/issues/6",
+    "title": "[A01] Record the current system and target architecture"
+  },
+  "A02": {
+    "number": 7,
+    "url": "https://github.com/sepyHR80/StockApp/issues/7",
+    "title": "[A02] Specify API and persistence contracts"
+  },
+  "A03": {
+    "number": 8,
+    "url": "https://github.com/sepyHR80/StockApp/issues/8",
+    "title": "[A03] Create architecture decision and change history"
+  },
+  "A04": {
+    "number": 9,
+    "url": "https://github.com/sepyHR80/StockApp/issues/9",
+    "title": "[A04] Define agent development and PR workflow"
+  },
+  "A05": {
+    "number": 10,
+    "url": "https://github.com/sepyHR80/StockApp/issues/10",
+    "title": "[A05] Create and validate seven project skills"
+  },
+  "A06": {
+    "number": 11,
+    "url": "https://github.com/sepyHR80/StockApp/issues/11",
+    "title": "[A06] Run persistent local Penpot"
+  },
+  "A07": {
+    "number": 12,
+    "url": "https://github.com/sepyHR80/StockApp/issues/12",
+    "title": "[A07] Recreate current UI as editable Penpot components"
+  },
+  "A08": {
+    "number": 13,
+    "url": "https://github.com/sepyHR80/StockApp/issues/13",
+    "title": "[A08] Bridge saved designs to validated local snapshots"
+  },
+  "A09": {
+    "number": 14,
+    "url": "https://github.com/sepyHR80/StockApp/issues/14",
+    "title": "[A09] Apply design changes with isolated Codex runs"
+  },
+  "A10": {
+    "number": 15,
+    "url": "https://github.com/sepyHR80/StockApp/issues/15",
+    "title": "[A10] Document Render operations and retire legacy capacity"
+  },
+  "B01": {
+    "number": 16,
+    "url": "https://github.com/sepyHR80/StockApp/issues/16",
+    "title": "[B01] Bootstrap the modular API with health checks and CI"
+  },
+  "B02": {
+    "number": 17,
+    "url": "https://github.com/sepyHR80/StockApp/issues/17",
+    "title": "[B02] Create PostgreSQL schema and migration baseline"
+  },
+  "B03": {
+    "number": 18,
+    "url": "https://github.com/sepyHR80/StockApp/issues/18",
+    "title": "[B03] Verify Firebase identity and enforce API ownership"
+  },
+  "B04": {
+    "number": 19,
+    "url": "https://github.com/sepyHR80/StockApp/issues/19",
+    "title": "[B04] Enable native Google sign-in and session lifecycle"
+  },
+  "B05": {
+    "number": 20,
+    "url": "https://github.com/sepyHR80/StockApp/issues/20",
+    "title": "[B05] Implement account export and deletion"
+  },
+  "B06": {
+    "number": 21,
+    "url": "https://github.com/sepyHR80/StockApp/issues/21",
+    "title": "[B06] Introduce screen state holders and repositories"
+  },
+  "C01": {
+    "number": 22,
+    "url": "https://github.com/sepyHR80/StockApp/issues/22",
+    "title": "[C01] Qualify market-data provider and usage rights"
+  },
+  "C02": {
+    "number": 23,
+    "url": "https://github.com/sepyHR80/StockApp/issues/23",
+    "title": "[C02] Implement stable asset catalog and search"
+  },
+  "C03": {
+    "number": 24,
+    "url": "https://github.com/sepyHR80/StockApp/issues/24",
+    "title": "[C03] Ingest and normalize daily market candles"
+  },
+  "C04": {
+    "number": 25,
+    "url": "https://github.com/sepyHR80/StockApp/issues/25",
+    "title": "[C04] Cache market data within provider quotas"
+  },
+  "C05": {
+    "number": 26,
+    "url": "https://github.com/sepyHR80/StockApp/issues/26",
+    "title": "[C05] Display real daily charts and custom date ranges"
+  },
+  "C06": {
+    "number": 27,
+    "url": "https://github.com/sepyHR80/StockApp/issues/27",
+    "title": "[C06] Persist account watchlists"
+  },
+  "D01": {
+    "number": 28,
+    "url": "https://github.com/sepyHR80/StockApp/issues/28",
+    "title": "[D01] Calculate deterministic historical analysis"
+  },
+  "D02": {
+    "number": 29,
+    "url": "https://github.com/sepyHR80/StockApp/issues/29",
+    "title": "[D02] Explain verified metrics through an LLM adapter"
+  },
+  "D03": {
+    "number": 30,
+    "url": "https://github.com/sepyHR80/StockApp/issues/30",
+    "title": "[D03] Implement durable analysis execution lifecycle"
+  },
+  "D04": {
+    "number": 31,
+    "url": "https://github.com/sepyHR80/StockApp/issues/31",
+    "title": "[D04] Create reproducible time-series research workflow"
+  },
+  "D05": {
+    "number": 32,
+    "url": "https://github.com/sepyHR80/StockApp/issues/32",
+    "title": "[D05] Gate model promotion with independent evaluation"
+  },
+  "D06": {
+    "number": 33,
+    "url": "https://github.com/sepyHR80/StockApp/issues/33",
+    "title": "[D06] Evaluate device and cloud inference for one model"
+  },
+  "E01": {
+    "number": 34,
+    "url": "https://github.com/sepyHR80/StockApp/issues/34",
+    "title": "[E01] Deploy the first free Render API and PostgreSQL demo"
+  },
+  "E02": {
+    "number": 35,
+    "url": "https://github.com/sepyHR80/StockApp/issues/35",
+    "title": "[E02] Gate deployment and Android releases on CI"
+  },
+  "E03": {
+    "number": 36,
+    "url": "https://github.com/sepyHR80/StockApp/issues/36",
+    "title": "[E03] Prove backup restore and handle free database expiry"
+  },
+  "E04": {
+    "number": 37,
+    "url": "https://github.com/sepyHR80/StockApp/issues/37",
+    "title": "[E04] Rehearse compatible migrations and application rollback"
+  },
+  "E05": {
+    "number": 38,
+    "url": "https://github.com/sepyHR80/StockApp/issues/38",
+    "title": "[E05] Measure service health, capacity and provider consumption"
+  },
+  "F01": {
+    "number": 39,
+    "url": "https://github.com/sepyHR80/StockApp/issues/39",
+    "title": "[F01] Track manual portfolio positions"
+  },
+  "F02": {
+    "number": 40,
+    "url": "https://github.com/sepyHR80/StockApp/issues/40",
+    "title": "[F02] Deliver reliable end-of-day price alerts"
+  },
+  "F03": {
+    "number": 41,
+    "url": "https://github.com/sepyHR80/StockApp/issues/41",
+    "title": "[F03] Complete settings, accessibility and release readiness"
+  }
+}

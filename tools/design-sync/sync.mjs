@@ -4,9 +4,8 @@ import { constants } from 'node:fs';
 import { chmod, copyFile, lstat, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { setTimeout as delay } from 'node:timers/promises';
 import { affectedScope, authorized, bodyLimit, buildWithRepair, command, digest, ensureFingerprint, flexFields,
-  latestQueue, mappingPaths, object, readRequest, recordAttempt, repositoryRuntime, resumeState, shapeFields, snapshot, stable, writeJson } from './core.mjs';
+  latestQueue, mappingPaths, object, readRequest, recordAttempt, repositoryRuntime, resumeState, shapeFields, snapshot, stable, waitForEmulator, writeJson } from './core.mjs';
 
 const repo = fileURLToPath(new URL('../../', import.meta.url));
 const script = name => readFile(new URL(name, import.meta.url), 'utf8');
@@ -210,16 +209,7 @@ async function main() {
     state.stage = 'awaiting-emulator';
     await persist();
     log('awaiting-emulator');
-    let emulatorReady = false;
-    for (const until = Date.now() + 5 * 60_000; Date.now() < until;) {
-      const device = await run(adbExecutable, [...adb, 'emu', 'avd', 'name'], { timeout: 5000 });
-      if (device.ok && device.output.split(/\r?\n/).includes('OK')) {
-        emulatorReady = true;
-        break;
-      }
-      await delay(3000, undefined, { signal: abort.signal });
-    }
-    if (!emulatorReady) throw new Error('emulator-unavailable');
+    await waitForEmulator(run, adbExecutable, adb, abort.signal);
     const apk = join(worktree, 'app/build/outputs/apk/debug/app-debug.apk');
     if (!(await run(adbExecutable, [...adb, 'install', '-r', apk])).ok) throw new Error('install-failed');
     if (!(await run(adbExecutable, [...adb, 'shell', 'am', 'start', '-W', '-n',

@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
 
 export const bodyLimit = 24 * 1024 * 1024;
 export const uuid = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
@@ -200,6 +201,18 @@ export async function buildWithRepair(build, repair) {
     result = await build();
   }
   return result;
+}
+
+export async function waitForEmulator(run, executable, device, signal) {
+  for (const until = Date.now() + 5 * 60_000; Date.now() < until;) {
+    const avd = await run(executable, [...device, 'emu', 'avd', 'name'], { timeout: 5000 });
+    if (avd.ok && avd.output.split(/\r?\n/).includes('OK')) {
+      const boot = await run(executable, [...device, 'shell', 'getprop', 'sys.boot_completed'], { timeout: 5000 });
+      if (boot.ok && boot.output.trim() === '1') return;
+    }
+    await delay(3000, undefined, { signal });
+  }
+  throw new Error('emulator-unavailable');
 }
 
 export function command(executable, args, { cwd, input, timeout = 60_000, signal, binary = false } = {}) {

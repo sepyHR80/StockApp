@@ -294,12 +294,15 @@ function components(board) {
   for (const [name, shape] of entries) penpot.library.local.createComponent([shape]).name = name;
 }
 
-async function seed() {
-  if (penpot.root.children.length || penpot.library.local.components.length || penpot.library.local.colors.length) {
+function seed() {
+  const file = penpot.currentFile;
+  if (!file || file.pages.some(page => page.root.children.length) ||
+      penpot.library.local.components.length || penpot.library.local.colors.length) {
     throw new Error("Open a blank Penpot file before running the Pulse initial design plugin.");
   }
   penpot.currentPage.name = "Pulse · Android";
   const history = penpot.history.undoBlockBegin();
+  const boards = {};
   try {
     for (const [name, value] of Object.entries(palette)) {
       const color = penpot.library.local.createColor();
@@ -320,26 +323,28 @@ async function seed() {
       ["Alerts", board => placeholder(board, "Alerts")],
       ["Settings", board => placeholder(board, "Settings")],
     ];
-    for (const [index, [name, draw]] of screens.entries()) draw(frame(name, index));
-    components(frame("Pulse components", screens.length));
+    for (const [index, [name, draw]] of screens.entries()) {
+      const board = frame(name, index);
+      draw(board);
+      boards[name] = board.id;
+    }
+    const componentBoard = frame("Pulse components", screens.length);
+    components(componentBoard);
+    boards[componentBoard.name] = componentBoard.id;
   } finally {
     penpot.history.undoBlockFinish(history);
   }
   penpot.viewport.zoomToFitAll();
+  return { fileId: file.id, pageId: penpot.currentPage.id, boards };
 }
 
 async function open() {
   const base = "http://127.0.0.1:41783";
   penpot.ui.open("Pulse initial design", base + "/seed.html", { width: 360, height: 180 });
-  penpot.ui.onMessage(async message => {
+  penpot.ui.onMessage(message => {
     if (message !== "seed") return;
     try {
-      await seed();
-      penpot.ui.sendMessage({
-        fileId: penpot.currentFile.id,
-        pageId: penpot.currentPage.id,
-        boards: Object.fromEntries(penpot.root.children.map(board => [board.name, board.id])),
-      });
+      penpot.ui.sendMessage(seed());
     } catch (error) {
       penpot.ui.sendMessage({ error: error.message ?? String(error) });
     }

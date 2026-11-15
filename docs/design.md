@@ -31,7 +31,7 @@ The local stack is opt-in and has no automatic restart. Stop it after each desig
 (cd tools/penpot && docker compose stop)
 ```
 
-The backend is capped at 1 GiB and one CPU, with a 512 MiB Java heap and 256 MiB metaspace. The frontend, exporter, PostgreSQL and Valkey are capped at 128, 384, 256 and 128 MiB respectively. Allow the backend to finish booting after startup before opening the editor. Stop the Android emulator before a resource-heavy Penpot session and stop Penpot before starting an Android build or emulator verification.
+The backend is capped at 1 GiB and one CPU, with a 512 MiB Java heap and 256 MiB metaspace. The frontend, exporter, PostgreSQL and Valkey are capped at 128, 384, 256 and 128 MiB respectively. The exporter handles one job at a time and starts workers on demand. Allow the backend to finish booting after startup before opening the editor. Stop the Android emulator before a resource-heavy Penpot session and stop Penpot before starting an Android build or emulator verification.
 
 ## Recreate the editable baseline
 
@@ -40,6 +40,8 @@ The backend is capped at 1 GiB and one CPU, with a 512 MiB Java heap and 256 MiB
 3. Open **Plugins**, paste `http://127.0.0.1:41783/manifest.json`, and install **Pulse initial design**.
 4. Open the plugin and select **Create editable Pulse screens**. Run this once per blank file. The panel displays the IDs for the file and each board.
 5. Export the design from the Penpot Dashboard when you need a portable copy. The exported file can be imported from the Dashboard on another compatible Penpot instance. [Penpot import and export](https://help.penpot.app/user-guide/export-import/)
+
+The initial local export contains editable layers for all 12 screen states. Its font metadata selects Roboto Mono, while the captured PNG showed a serif fallback. Chart areas also need explicit editable gradient fills instead of relying on imported SVG attributes. The seed source now selects Roboto by font ID and assigns gradients directly to path layers for future seeds. The saved baseline still requires these corrections and a fresh visual check.
 
 See [design-sync.md](design-sync.md) for wiring the board IDs to native Kotlin files, review and screenshot verification.
 

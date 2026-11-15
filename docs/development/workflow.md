@@ -18,6 +18,8 @@ If Docker is stopped, leave it stopped for Android work. Stop Penpot's own conta
 3. If needed, run `./gradlew :app:assembleDebug` or `./gradlew :app:lintDebug` in separate stages. The repository already configures one worker, no parallel execution, a 768 MiB heap and no persistent daemon. The APK is at `app/build/outputs/apk/debug/app-debug.apk`, and lint reports are under `app/build/reports/`.
 4. If interaction or rendering needs verification after assembly, open the selected emulator or connect an API 23+ device. Install the existing APK with `adb -s <device-id> install -r app/build/outputs/apk/debug/app-debug.apk` and close the task-owned emulator when done.
 
+Keep one emulator at most. For the local StockApp AVD, use a 2 GiB guest and two cores (`emulator -avd AndroidStockApp_API_36 -memory 2048 -cores 2 -no-snapshot-save`). Preserve incremental build caches; do not add `clean` to routine verification. On macOS, `sysctl kern.memorystatus_vm_pressure_level` reports the current pressure level; schedule a heavy stage only after pressure returns to normal (1).
+
 
 For UI changes, open Pulse, enter demo mode, navigate across the tabs, inspect a chart, toggle a watchlist item and use Back. Capture the affected screens on a narrow viewport and check font scaling, touch targets, navigation insets and list-end reachability. Gradle assembly and lint cover different checks from this interactive pass.
 

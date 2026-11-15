@@ -8,10 +8,11 @@ temporary="$(mktemp -d .local/backups/.incomplete.XXXXXXXX)"
 compose=(docker compose --env-file .env -f compose.yaml -p stockapp-penpot)
 
 # Stop writes across both the database and asset volume while taking the snapshot.
+services=$("${compose[@]}" ps --status running --services)
 running=()
 while IFS= read -r service; do
   case "$service" in frontend|exporter|backend) running+=("$service");; esac
-done < <("${compose[@]}" ps --status running --services)
+done <<< "$services"
 if (( ${#running[@]} )); then
   trap '"${compose[@]}" start "${running[@]}"' EXIT
   "${compose[@]}" stop "${running[@]}"

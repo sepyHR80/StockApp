@@ -8,6 +8,7 @@ on:
       - '.github/workflows/docs.yml'
       - 'tools/design-sync/**'
   push:
+    branches: [main]
     paths:
       - 'docs/**'
       - '.agents/skills/**'

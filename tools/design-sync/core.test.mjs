@@ -6,7 +6,7 @@ import { Readable } from 'node:stream';
 import test from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
 import { affectedScope, authorized, buildWithRepair, command, ensureFingerprint, latestQueue,
-  mappingPaths, readRequest, recordAttempt, repositoryRuntime, resumeState, snapshot, stable, takeSlot, uiPath } from './core.mjs';
+  mappingPaths, readRequest, recordAttempt, repositoryRuntime, resumeState, snapshot, stable, takeSlot, uiPath, waitForEmulator } from './core.mjs';
 
 const fileId = '224cc244-cd3c-4c88-aea0-532883240284';
 const id = 'd075f952-0d8c-4b6e-9b29-10373c7a4dc5';
@@ -162,4 +162,14 @@ test('one build repair and timeout terminates a real child', async () => {
   const success = await buildWithRepair(async () => ({ ok: true }), () => { repairs++; });
   assert.deepEqual([success.ok, repairs], [true, 1]);
   await assert.rejects(command(process.execPath, ['-e', 'setInterval(() => {}, 10)'], { timeout: 20 }), /timeout/);
+});
+
+test('preview waits for Android boot even when the emulator console responds', async () => {
+  let bootChecks = 0;
+  const run = async (_, args) => args.includes('getprop')
+    ? { ok: true, output: ++bootChecks === 1 ? '0\n' : '1\n' }
+    : { ok: true, output: 'StockApp\nOK\n' };
+  await waitForEmulator(run, 'adb', ['-s', 'emulator-5554']);
+  assert.equal(bootChecks, 2, 'Installation must wait past the responsive-but-booting state');
+  await assert.rejects(waitForEmulator(async () => ({ ok: false }), 'adb', [], AbortSignal.abort()), /abort/i);
 });

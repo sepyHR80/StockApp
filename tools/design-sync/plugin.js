@@ -24,6 +24,7 @@ async function collect(fileId, ticket) {
   const ids = fileIds.get(fileId);
   if (ticket !== generation || file?.id !== fileId || !ids) return;
   sending = true;
+  let stage = 'read token sets';
   try {
     const library = penpot.library.local;
     const tokens = (library.tokens?.sets ?? []).map(set => ({
@@ -32,20 +33,28 @@ async function collect(fileId, ticket) {
     }));
     const boards = [];
     for (const id of ids) {
+      stage = 'find mapped board';
       const shape = file.pages.map(page => page.getShapeById(id)).find(Boolean);
       if (shape?.type !== 'board') throw new Error('A mapped board is missing');
+      stage = 'read board structure';
       const tree = JSON.parse(JSON.stringify(describe(shape, true)));
       const key = JSON.stringify([tree, tokens]);
       if (images.get(id)?.key !== key) {
+        stage = 'export board PNG';
         const bytes = await shape.export({ type: 'png', scale: 1 });
         images.set(id, { key, bytes });
       }
       boards.push({ id, tree, bytes: images.get(id).bytes });
     }
     if (ticket !== generation || penpot.currentFile?.id !== fileId) return;
+    stage = 'send snapshot to panel';
     penpot.ui.sendMessage({ type: 'snapshot', fileId, boards, tokens });
-  } catch {
-    penpot.ui.sendMessage({ type: 'error', text: 'Snapshot failed. Check the mapped boards and plugin permissions.' });
+  } catch (error) {
+    const name = ['Error', 'TypeError', 'RangeError', 'ReferenceError', 'DataCloneError', 'SecurityError'].includes(error?.name)
+      ? error.name : 'Plugin error';
+    const message = typeof error?.message === 'string' ? error.message : '';
+    const detail = message.match(/^(?:Cannot read properties of (?:undefined|null) \(reading '[a-zA-Z]+'\)|[a-zA-Z.]+ is not a function|[a-zA-Z]+ is not defined|A mapped board is missing)$/)?.[0] ?? '';
+    penpot.ui.sendMessage({ type: 'error', text: 'Snapshot failed during ' + stage + ' (' + name + ')' + (detail ? '. ' + detail : '.') });
   } finally {
     sending = false;
   }

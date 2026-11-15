@@ -55,6 +55,12 @@ services:
       PENPOT_SECRET_KEY: ${PENPOT_SECRET_KEY:?Run the bootstrap command in docs/design.md}
       PENPOT_INTERNAL_URI: http://frontend:8080
       PENPOT_REDIS_URI: redis://valkey/0
+      PENPOT_BROWSER_POOL_MAX: 1
+      PENPOT_EXPORTER_MAX_CONCURRENT_JOBS: 1
+      PENPOT_EXPORTER_MAX_JOBS_PER_PROFILE: 1
+      PENPOT_WASM_WORKER_POOL_MIN: 0
+      PENPOT_WASM_WORKER_POOL_MAX: 1
+      PENPOT_WASM_WORKER_IMAGE_CACHE_SIZE: 16777216
     depends_on:
       valkey: {condition: service_healthy}
 

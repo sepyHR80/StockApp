@@ -22,6 +22,27 @@ flowchart LR
 
 Public demo endpoints use versioned synthetic fixtures. Personal endpoints require a Google sign-in and an allowlisted Firebase UID. External providers and inference APIs are server-side integrations. Scope the first product to date-range queries over US stocks and USD-denominated cryptocurrency. Analysis starts with deterministic metrics and adds a grounded explanation under an independent runtime status.
 
+```mermaid
+sequenceDiagram
+  participant Android
+  participant Firebase
+  participant API
+  participant DB
+  Android->>Firebase: Google credential from Credential Manager
+  Firebase-->>Android: Firebase ID token
+  Android->>API: Bearer token + asset ID + inclusive date range
+  API->>API: Verify project, expiry, provider, allowlist and owner
+  API->>DB: Read validated daily snapshot and coverage
+  DB-->>API: Decimal prices, provenance, complete-session boundary
+  API-->>Android: Data with coverage, or explicit error
+  Android->>API: Analysis request with owner-scoped idempotency key
+  API->>DB: Persist job and selected immutable snapshot
+  API->>API: Compute metrics, then optional grounded explanation
+  API->>DB: Commit results using current attempt token
+  Android->>API: Poll own job with bounded backoff
+  API-->>Android: Metrics and independent explanation status
+```
+
 Read the [Android design](android.md), [backend design](backend.md), [architecture decisions](adr/README.md), [roadmap](../development/roadmap.md), [API](api-v1.yaml), [schema](data-model.md), [analysis design](ai-ml.md), and [Render runbook](../operations/render.md).
 
 

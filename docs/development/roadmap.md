@@ -6,16 +6,16 @@ Each work item has acceptance criteria, exclusions, dependency links and verific
 
 | ID | Deliverable / issue | Depends on | Status | Specification |
 | --- | --- | --- | --- | --- |
-| A01 | [Record the current system and target architecture](https://github.com/sepyHR80/StockApp/issues/6) | Baseline | In progress | [A01](issues/A01.md) |
-| A02 | [Specify API and persistence contracts](https://github.com/sepyHR80/StockApp/issues/7) | A01 | In progress | [A02](issues/A02.md) |
-| A03 | [Create architecture decision and change history](https://github.com/sepyHR80/StockApp/issues/8) | A01 | In progress | [A03](issues/A03.md) |
-| A04 | [Define agent development and PR workflow](https://github.com/sepyHR80/StockApp/issues/9) | A01, A03 | In progress | [A04](issues/A04.md) |
-| A05 | [Create and validate seven project skills](https://github.com/sepyHR80/StockApp/issues/10) | A01, A02, A04 | In progress | [A05](issues/A05.md) |
-| A06 | [Run persistent local Penpot](https://github.com/sepyHR80/StockApp/issues/11) | A04 | In progress | [A06](issues/A06.md) |
-| A07 | [Recreate current UI as editable Penpot components](https://github.com/sepyHR80/StockApp/issues/12) | A06 | In progress | [A07](issues/A07.md) |
-| A08 | [Bridge saved designs to validated local snapshots](https://github.com/sepyHR80/StockApp/issues/13) | A06, A07 | In progress | [A08](issues/A08.md) |
-| A09 | [Apply design changes with isolated Codex runs](https://github.com/sepyHR80/StockApp/issues/14) | A08 | In progress | [A09](issues/A09.md) |
-| A10 | [Document Render operations and retire legacy capacity](https://github.com/sepyHR80/StockApp/issues/15) | A03, A04 | In progress | [A10](issues/A10.md) |
+| A01 | [Record the current system and target architecture](https://github.com/sepyHR80/StockApp/issues/6) | Baseline | In review | [A01](issues/A01.md) |
+| A02 | [Specify API and persistence contracts](https://github.com/sepyHR80/StockApp/issues/7) | A01 | In review | [A02](issues/A02.md) |
+| A03 | [Create architecture decision and change history](https://github.com/sepyHR80/StockApp/issues/8) | A01 | In review | [A03](issues/A03.md) |
+| A04 | [Define agent development and PR workflow](https://github.com/sepyHR80/StockApp/issues/9) | A01, A03 | In review | [A04](issues/A04.md) |
+| A05 | [Create and validate seven project skills](https://github.com/sepyHR80/StockApp/issues/10) | A01, A02, A04 | In review | [A05](issues/A05.md) |
+| A06 | [Run persistent local Penpot](https://github.com/sepyHR80/StockApp/issues/11) | A04 | In review | [A06](issues/A06.md) |
+| A07 | [Recreate current UI as editable Penpot components](https://github.com/sepyHR80/StockApp/issues/12) | A06 | Visual corrections pending | [A07](issues/A07.md) |
+| A08 | [Bridge saved designs to validated local snapshots](https://github.com/sepyHR80/StockApp/issues/13) | A06, A07 | In review | [A08](issues/A08.md) |
+| A09 | [Apply design changes with isolated Codex runs](https://github.com/sepyHR80/StockApp/issues/14) | A08 | Live rerun pending | [A09](issues/A09.md) |
+| A10 | [Document Render operations and retire legacy capacity](https://github.com/sepyHR80/StockApp/issues/15) | A03, A04 | In review | [A10](issues/A10.md) |
 | B01 | [Bootstrap the modular API with health checks and CI](https://github.com/sepyHR80/StockApp/issues/16) | A02, A04 | Backlog | [B01](issues/B01.md) |
 | B02 | [Create PostgreSQL schema and migration baseline](https://github.com/sepyHR80/StockApp/issues/17) | B01 | Backlog | [B02](issues/B02.md) |
 | B03 | [Verify Firebase identity and enforce API ownership](https://github.com/sepyHR80/StockApp/issues/18) | B01, B02 | Backlog | [B03](issues/B03.md) |
@@ -46,3 +46,5 @@ Each work item has acceptance criteria, exclusions, dependency links and verific
 ## Definition of done
 
 A merged PR links its issue, demonstrates each acceptance criterion, updates affected docs/ADRs and records commands plus outputs. A tool that has only unit tests is not live-integration verified. No automatic merge or deploy from design saves.
+
+Evidence and explicit gaps: [foundation verification](verification.md), delivered for review in [PR #42](https://github.com/sepyHR80/StockApp/pull/42).

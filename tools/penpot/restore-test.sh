@@ -18,4 +18,4 @@ trap '"${compose[@]}" down -v' EXIT
 "${compose[@]}" exec -T postgres pg_restore --exit-on-error -U penpot -d penpot < "$backup/database.dump"
 "${compose[@]}" run --rm --no-deps -T --entrypoint tar backend -C /opt/data/assets -xzf - < "$backup/assets.tar.gz"
 "${compose[@]}" run --rm --no-deps -T --entrypoint tar backend -C /opt/data/assets -dzf - < "$backup/assets.tar.gz"
-"${compose[@]}" exec -T postgres psql -U penpot -d penpot -v ON_ERROR_STOP=1 -c 'SELECT name FROM file WHERE deleted_at IS NULL ORDER BY name'
+"${compose[@]}" exec -T postgres psql -U penpot -d penpot -v ON_ERROR_STOP=1 -c 'SELECT name, revn FROM file WHERE deleted_at IS NULL ORDER BY name'

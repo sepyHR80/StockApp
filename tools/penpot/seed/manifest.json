@@ -1,0 +1,7 @@
+{
+  "name": "Pulse initial design",
+  "description": "Create the editable initial Pulse screens in a blank local Penpot file.",
+  "host": "http://127.0.0.1:41783",
+  "code": "/seed.js",
+  "permissions": ["content:read", "content:write", "library:read", "library:write"]
+}

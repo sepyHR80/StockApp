@@ -1,0 +1,49 @@
+name: Documentation
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '.agents/skills/**'
+      - '.github/workflows/docs.yml'
+      - 'tools/design-sync/**'
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - '.agents/skills/**'
+      - '.github/workflows/docs.yml'
+      - 'tools/design-sync/**'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'openapi-spec-validator==0.7.2' 'PyYAML==6.0.3'
+      - run: openapi-spec-validator docs/architecture/api-v1.yaml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test --test-concurrency=1 tools/design-sync/core.test.mjs
+      - name: Check skill frontmatter
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          import yaml
+
+          skills = sorted(Path(".agents/skills").glob("stockapp-*/SKILL.md"))
+          assert len(skills) == 7, "Expected seven StockApp skills"
+          for skill in skills:
+              match = re.match(r"\A---\n(.*?)\n---\n", skill.read_text(), re.S)
+              assert match, f"{skill} requires YAML frontmatter"
+              metadata = yaml.safe_load(match[1])
+              assert metadata["name"] == skill.parent.name, skill
+              assert isinstance(metadata["description"], str) and metadata["description"].strip(), skill

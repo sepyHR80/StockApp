@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Pulse initial design</title>
+<body style="font: 14px system-ui; padding: 10px;">
+<button id="seed">Create editable Pulse screens</button>
+<pre id="result" style="white-space: pre-wrap;"></pre>
+<script>
+const button = document.getElementById("seed");
+button.onclick = () => {
+  button.disabled = true;
+  document.getElementById("result").textContent = "Creating screens…";
+  parent.postMessage("seed", "*");
+};
+window.addEventListener("message", event => {
+  if (event.source !== parent) return;
+  document.getElementById("result").textContent = JSON.stringify(event.data, null, 2);
+});
+</script>
+</body>
+</html>

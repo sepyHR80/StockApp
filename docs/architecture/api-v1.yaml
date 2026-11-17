@@ -1,0 +1,432 @@
+openapi: 3.0.3
+info:
+  title: StockApp API
+  version: 1.0.0
+  description: Planned contract. Public paths use synthetic data and personal paths use allowlisted real data.
+security:
+  - firebase: []
+paths:
+  /healthz:
+    get:
+      security: []
+      operationId: health
+      responses:
+        '200':
+          description: Process is alive
+  /readyz:
+    get:
+      security: []
+      operationId: readiness
+      responses:
+        '200':
+          description: Database and schema can serve requests
+        '503':
+          $ref: '#/components/responses/Error'
+  /v1/personal/watchlist:
+    get:
+      operationId: getWatchlist
+      responses:
+        '200':
+          description: Owner's watchlist, possibly empty
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/Instrument'}
+              example: []
+        default:
+          $ref: '#/components/responses/Error'
+  /v1/personal/watchlist/{instrumentId}:
+    parameters:
+      - name: instrumentId
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+    put:
+      operationId: addWatchlistEntry
+      responses:
+        '204':
+          description: Instrument present after idempotent add
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      operationId: deleteWatchlistEntry
+      responses:
+        '204':
+          description: Instrument absent after idempotent removal
+        default:
+          $ref: '#/components/responses/Error'
+  /v1/personal/account/export:
+    get:
+      operationId: exportAccount
+      description: Returns an owner-scoped export with Cache-Control no-store.
+      responses:
+        '200':
+          description: Export of data owned by the authenticated StockApp user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountExport'
+        default:
+          $ref: '#/components/responses/Error'
+  /v1/personal/account:
+    delete:
+      operationId: deleteAccount
+      description: Accepts a recently reauthenticated Firebase session. Atomically disable personal access and queue idempotent deletion of local owned data and the Firebase identity.
+      responses:
+        '202':
+          description: Deletion accepted
+        default:
+          $ref: '#/components/responses/Error'
+  /v1/personal/instruments:
+    get:
+      description: Requires a valid allowlisted Firebase identity.
+      operationId: listInstruments
+      parameters: &catalog_parameters
+        - name: q
+          in: query
+          description: Case-insensitive symbol or venue substring; omit to list all supported instruments.
+          schema: {type: string, minLength: 1, maxLength: 100}
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 100, default: 50}
+        - name: offset
+          in: query
+          schema: {type: integer, minimum: 0, default: 0}
+      responses: &responses_1
+        '200':
+          description: Supported instruments ordered by symbol, venue and ID. Offset pagination does not guarantee a snapshot across requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstrumentPage'
+        default:
+          $ref: '#/components/responses/Error'
+  /v1/personal/instruments/{instrumentId}/daily-bars:
+    parameters: &path_parameters_2
+      - name: instrumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      description: Personal mode requires a valid allowlisted Firebase identity. Range is inclusive and at most 366 calendar days.
+      operationId: getDailyBars
+      parameters: &parameters_2
+        - name: start
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses: &responses_2
+        '200':
+          description: Completed raw daily OHLC bars with explicit coverage, which may be partial or empty; unfinished sessions are excluded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Series'
+              example:
+                snapshot_id: 379090bc-32b6-4f4c-87bb-aec343a6ab51
+                source: synthetic-v1
+                adjustment: raw
+                expected_sessions: 1
+                observed_sessions: 1
+                missing_dates: []
+                bars:
+                  - {date: '2026-01-05', open: '101.10', high: '103.20', low: '99.80', close: '102.25', volume: '125.125'}
+        default:
+          $ref: '#/components/responses/Error'
+  /v1/personal/analysis-jobs:
+    post:
+      description: Personal mode requires a valid allowlisted Firebase identity. Identical idempotent replay returns the stored job.
+      operationId: createAnalysisJob
+      parameters: &parameters_3
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 16
+            maxLength: 128
+      requestBody: &requestBody_3
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisRequest'
+      responses: &responses_3
+        '202':
+          description: Accepted or replayed with the identical idempotency key
+          headers:
+            Location:
+              description: Relative URL at which to poll this job
+              schema:
+                type: string
+            Retry-After:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+              example:
+                id: 38bb9d75-0911-43ab-b091-9742cfa948cf
+                status: queued
+                explanation_status: pending
+        default:
+          $ref: '#/components/responses/Error'
+  /v1/personal/analysis-jobs/{jobId}:
+    parameters: &parameters_4
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      description: Personal mode requires a valid allowlisted Firebase identity. Jobs outside the caller scope return 404.
+      operationId: getAnalysisJob
+      responses: &responses_4
+        '200':
+          description: Status and result when available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+              example:
+                id: 38bb9d75-0911-43ab-b091-9742cfa948cf
+                status: succeeded
+                explanation_status: disabled
+                result:
+                  snapshot_id: 379090bc-32b6-4f4c-87bb-aec343a6ab51
+                  source: synthetic-v1
+                  adjustment: raw
+                  expected_sessions: 3
+                  observed_sessions: 3
+                  missing_dates: []
+                  requested_start: '2026-01-05'
+                  requested_end: '2026-01-07'
+                  effective_start: '2026-01-05'
+                  effective_end: '2026-01-07'
+                  metric_version: daily-v1
+                  metrics:
+                    cumulative_return: '0.0201'
+                    annualized_volatility: '0'
+                    max_drawdown: '0'
+        default:
+          $ref: '#/components/responses/Error'
+  /v1/personal/analysis-jobs/{jobId}/cancel:
+    parameters: *parameters_4
+    post:
+      operationId: cancelAnalysisJob
+      description: >-
+        Requires a valid allowlisted Firebase identity and the same owner-scoped lookup as
+        job polling; missing or another owner's jobs return 404. Cancellation is idempotent.
+        Unfinished deterministic work becomes failed with failure_code cancelled. If metrics
+        are committed while the explanation is pending, retain the succeeded metrics and mark
+        the explanation unavailable. A fully completed job is unchanged. Fence late results
+        with the attempt token; whichever completion or cancellation commits first wins.
+      responses:
+        '200':
+          description: Current job after accepted or repeated cancellation
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Job'}
+        default:
+          $ref: '#/components/responses/Error'
+  /v1/demo/instruments:
+    get:
+      security: []
+      operationId: demoListInstruments
+      parameters: *catalog_parameters
+      description: Public synthetic data only. Date ranges are inclusive where applicable.
+      responses: *responses_1
+  /v1/demo/instruments/{instrumentId}/daily-bars:
+    parameters: *path_parameters_2
+    get:
+      security: []
+      operationId: demoGetDailyBars
+      description: Public synthetic data only. Date ranges are inclusive where applicable.
+      parameters: *parameters_2
+      responses: *responses_2
+  /v1/demo/analysis-jobs:
+    post:
+      security: []
+      operationId: demoCreateAnalysisJob
+      description: Public synthetic data only. Date ranges are inclusive where applicable.
+      parameters: *parameters_3
+      requestBody: *requestBody_3
+      responses: *responses_3
+  /v1/demo/analysis-jobs/{jobId}:
+    parameters: *parameters_4
+    get:
+      security: []
+      operationId: demoGetAnalysisJob
+      description: Public synthetic data only. Date ranges are inclusive where applicable.
+      responses: *responses_4
+components:
+  securitySchemes:
+    firebase:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID token
+  responses:
+    Error:
+      description: 401 invalid identity, 403 access denied, 404 missing resource, 409 idempotency conflict, 422 invalid input, insufficient coverage, or unverified adjustment, 429 rate limited, 503 temporarily unavailable.
+      headers:
+        Retry-After:
+          description: Seconds before retry for throttling or temporary unavailability
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: insufficient_coverage
+            message: Analysis requires at least three completed sessions with full coverage.
+            request_id: req-example
+  schemas:
+    AccountExport:
+      type: object
+      required: [created_at, analysis_jobs, watchlist, settings]
+      properties:
+        created_at: {type: string, format: date-time}
+        settings:
+          type: object
+          required: [explanations_enabled]
+          properties:
+            explanations_enabled: {type: boolean}
+        analysis_jobs:
+          type: array
+          items: {$ref: '#/components/schemas/Job'}
+        watchlist:
+          type: array
+          items: {$ref: '#/components/schemas/Instrument'}
+    Error:
+      type: object
+      required: [code, message, request_id]
+      properties:
+        code: {type: string}
+        message: {type: string}
+        request_id: {type: string}
+    Instrument:
+      type: object
+      required: [id, symbol, venue, asset_class, currency]
+      properties:
+        id: {type: string, format: uuid}
+        symbol: {type: string}
+        venue: {type: string}
+        asset_class: {type: string, enum: [us_equity, crypto]}
+        currency: {type: string, enum: [USD]}
+    InstrumentPage:
+      type: object
+      required: [items, next_offset]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Instrument'}
+        next_offset:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Offset for the next page, or null at the end.
+    Decimal:
+      type: string
+      pattern: '^-?[0-9]+(\.[0-9]+)?$'
+    Bar:
+      type: object
+      required: [date, open, high, low, close, volume]
+      properties:
+        date: {type: string, format: date}
+        open: {$ref: '#/components/schemas/Decimal'}
+        high: {$ref: '#/components/schemas/Decimal'}
+        low: {$ref: '#/components/schemas/Decimal'}
+        close: {$ref: '#/components/schemas/Decimal'}
+        volume: {type: string, nullable: true, pattern: '^[0-9]+(\.[0-9]+)?$'}
+    Coverage:
+      type: object
+      required: [snapshot_id, source, adjustment, expected_sessions, observed_sessions, missing_dates]
+      properties:
+        snapshot_id: {type: string, format: uuid}
+        source: {type: string}
+        adjustment: {type: string, enum: [raw, split_adjusted]}
+        expected_sessions: {type: integer, minimum: 0, description: Completed eligible sessions only; excludes the current unfinished session.}
+        observed_sessions: {type: integer, minimum: 0}
+        missing_dates:
+          description: Missing completed eligible session dates; excludes the current unfinished session.
+          type: array
+          items: {type: string, format: date}
+    Series:
+      allOf:
+        - $ref: '#/components/schemas/Coverage'
+        - type: object
+          required: [bars]
+          properties:
+            bars:
+              type: array
+              items: {$ref: '#/components/schemas/Bar'}
+    AnalysisRequest:
+      type: object
+      additionalProperties: false
+      required: [instrument_id, start, end]
+      description: Inclusive range of at most 366 calendar days.
+      properties:
+        instrument_id: {type: string, format: uuid}
+        start: {type: string, format: date}
+        end: {type: string, format: date}
+        explain: {type: boolean, default: false}
+    Job:
+      type: object
+      required: [id, status, explanation_status]
+      properties:
+        id: {type: string, format: uuid}
+        status: {type: string, enum: [queued, running, succeeded, failed]}
+        explanation_status: {type: string, enum: [disabled, pending, succeeded, unavailable]}
+        failure_code:
+          type: string
+          description: Present only on terminal failure
+        result:
+          $ref: '#/components/schemas/AnalysisResult'
+        explanation:
+          type: object
+          required: [model_revision, claims]
+          properties:
+            model_revision: {type: string}
+            claims:
+              type: array
+              items:
+                type: object
+                required: [text, evidence_ids]
+                properties:
+                  text: {type: string}
+                  evidence_ids:
+                    type: array
+                    minItems: 1
+                    items: {type: string}
+    AnalysisResult:
+      allOf:
+        - $ref: '#/components/schemas/Coverage'
+        - type: object
+          required: [requested_start, requested_end, effective_start, effective_end, metric_version, metrics]
+          properties:
+            requested_start: {type: string, format: date}
+            requested_end: {type: string, format: date}
+            effective_start: {type: string, format: date}
+            effective_end: {type: string, format: date}
+            metric_version: {type: string}
+            metrics:
+              type: object
+              required: [cumulative_return, annualized_volatility, max_drawdown]
+              properties:
+                cumulative_return: {$ref: '#/components/schemas/Decimal'}
+                annualized_volatility: {$ref: '#/components/schemas/Decimal'}
+                max_drawdown: {$ref: '#/components/schemas/Decimal'}

@@ -1,11 +1,11 @@
 plugins {
-    id("com.android.application") version "9.0.1"
+    id("com.android.application") version "9.4.0"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.10"
 }
 
 android {
     namespace = "com.example.androidstockapp"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.example.androidstockapp"
@@ -21,8 +21,8 @@ android {
 }
 
 dependencies {
-    implementation(platform("androidx.compose:compose-bom:2026.02.00"))
-    implementation("androidx.activity:activity-compose:1.12.4")
-    implementation("androidx.compose.foundation:foundation-layout")
+    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
+    implementation("androidx.activity:activity-compose:1.13.0")
+    implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
 }

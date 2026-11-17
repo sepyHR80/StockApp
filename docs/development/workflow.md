@@ -27,6 +27,10 @@ For contract or docs changes, use the affected YAML validator and `git diff --ch
 
 Backend tasks become runnable as their packages and migrations land. A local Postgres deployment should be isolated from any hosted database and populated with synthetic seeds by default. Keep real-provider credentials and personal datasets in their own environment.
 
+Design Sync requires Node.js 22.15 or later and accepts a bounded PNG subset; see the [Design Sync guide](../design-sync.md).
+
+Use the [dependency-aware batch map](batches.md) for current phase and ordering.
+
 ## Issue to release
 
 1. Pick a published [roadmap item](roadmap.md), assign its implementer on GitHub, and check the linked prerequisites, acceptance criteria and verification steps. Record blockers on the issue. Confirm the target base before editing.

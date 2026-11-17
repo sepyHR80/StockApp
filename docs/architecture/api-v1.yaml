@@ -82,15 +82,24 @@ paths:
     get:
       description: Requires a valid allowlisted Firebase identity.
       operationId: listInstruments
+      parameters: &catalog_parameters
+        - name: q
+          in: query
+          description: Case-insensitive symbol or venue substring; omit to list all supported instruments.
+          schema: {type: string, minLength: 1, maxLength: 100}
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 100, default: 50}
+        - name: offset
+          in: query
+          schema: {type: integer, minimum: 0, default: 0}
       responses: &responses_1
         '200':
-          description: Instrument catalog for the selected mode
+          description: Supported instruments ordered by symbol, venue and ID. Offset pagination does not guarantee a snapshot across requests.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Instrument'
+                $ref: '#/components/schemas/InstrumentPage'
         default:
           $ref: '#/components/responses/Error'
   /v1/personal/instruments/{instrumentId}/daily-bars:
@@ -119,7 +128,7 @@ paths:
             format: date
       responses: &responses_2
         '200':
-          description: Raw daily OHLC and coverage, including incomplete or empty series
+          description: Completed raw daily OHLC bars with explicit coverage, which may be partial or empty; unfinished sessions are excluded
           content:
             application/json:
               schema:
@@ -214,10 +223,30 @@ paths:
                     max_drawdown: '0'
         default:
           $ref: '#/components/responses/Error'
+  /v1/personal/analysis-jobs/{jobId}/cancel:
+    parameters: *parameters_4
+    post:
+      operationId: cancelAnalysisJob
+      description: >-
+        Requires a valid allowlisted Firebase identity and the same owner-scoped lookup as
+        job polling; missing or another owner's jobs return 404. Cancellation is idempotent.
+        Unfinished deterministic work becomes failed with failure_code cancelled. If metrics
+        are committed while the explanation is pending, retain the succeeded metrics and mark
+        the explanation unavailable. A fully completed job is unchanged. Fence late results
+        with the attempt token; whichever completion or cancellation commits first wins.
+      responses:
+        '200':
+          description: Current job after accepted or repeated cancellation
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Job'}
+        default:
+          $ref: '#/components/responses/Error'
   /v1/demo/instruments:
     get:
       security: []
       operationId: demoListInstruments
+      parameters: *catalog_parameters
       description: Public synthetic data only. Date ranges are inclusive where applicable.
       responses: *responses_1
   /v1/demo/instruments/{instrumentId}/daily-bars:
@@ -298,6 +327,18 @@ components:
         venue: {type: string}
         asset_class: {type: string, enum: [us_equity, crypto]}
         currency: {type: string, enum: [USD]}
+    InstrumentPage:
+      type: object
+      required: [items, next_offset]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Instrument'}
+        next_offset:
+          type: integer
+          minimum: 0
+          nullable: true
+          description: Offset for the next page, or null at the end.
     Decimal:
       type: string
       pattern: '^-?[0-9]+(\.[0-9]+)?$'
@@ -318,9 +359,10 @@ components:
         snapshot_id: {type: string, format: uuid}
         source: {type: string}
         adjustment: {type: string, enum: [raw, split_adjusted]}
-        expected_sessions: {type: integer, minimum: 0}
+        expected_sessions: {type: integer, minimum: 0, description: Completed eligible sessions only; excludes the current unfinished session.}
         observed_sessions: {type: integer, minimum: 0}
         missing_dates:
+          description: Missing completed eligible session dates; excludes the current unfinished session.
           type: array
           items: {type: string, format: date}
     Series:

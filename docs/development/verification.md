@@ -15,6 +15,14 @@ Recorded 2026-11-15 for [PR #42](https://github.com/sepyHR80/StockApp/pull/42). 
 
 Screenshots, exported design, backup and generated UI patch are retained in the ignored local Penpot data directory. Public issue reports must not include its credentials or account exports.
 
+## Follow-up review, 2026-11-17
+
+The [batch map](batches.md) groups all 36 issues into bounded assignments with prerequisite and evidence gates. GPT-6.1 Terra implementation and independent reviews identified and corrected two runner integrity gaps: corrupted PNG input validation and source changes during emulator readiness/capture. New regression cases cover both. The supported PNG subset and runtime requirement are documented in the [design guide](../design-sync.md).
+
+Catalog pagination, completed-session coverage and owner-scoped job cancellation now agree across the planned API and issue specifications. These are contract changes, not backend features. Syntax and diff checks passed locally; the PR's Documentation check records OpenAPI, skill-frontmatter and focused runner-test results for each pushed revision. Local heavy checks were deferred by the resource gate.
+
+The saved editable Penpot baseline has Roboto on 103 text layers; 62 layers at weights 600/700 still need the approved font correction. Its existing portable export and backup predate that partial correction. Task-owned Penpot containers were stopped with volumes preserved. A07 remains open for the remaining repair, export and visual comparison; A09 remains open for a complete automatic run after the runner fixes. Existing backup/restore evidence and the earlier native checks above are retained without an unchanged rerun.
+
 ## Project skill scenarios
 
 The bundled skill-creator quick validator passed the seven initial project skill files. The scenarios below were walked through against repository guidance and contracts. These are documentation checks. They do not certify runtime behavior.

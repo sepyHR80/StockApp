@@ -1,8 +1,10 @@
 # Development roadmap
 
-Updated 2026-11-15. Phase A is the current architecture/tooling delivery. B–F are future implementation, not completed features. Native UI prerequisite: [PR #5](https://github.com/sepyHR80/StockApp/pull/5).
+Updated 2026-11-17. Phase A is the current architecture/tooling delivery. B–F are future implementation, not completed features. Native UI prerequisite: [PR #5](https://github.com/sepyHR80/StockApp/pull/5).
 
 Each work item has acceptance criteria, exclusions, dependency links and verification evidence in its specification. Assign the implementing agent in the GitHub issue before starting. Issues remain open until their required evidence is accepted.
+
+Use the [supervised work batches](batches.md) to assign two to four related issues at a time; retain each issue's own acceptance gate.
 
 | ID | Deliverable / issue | Depends on | Status | Specification |
 | --- | --- | --- | --- | --- |

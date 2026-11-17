@@ -4,13 +4,25 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import test from 'node:test';
+import { crc32, deflateSync } from 'node:zlib';
 import { setTimeout as delay } from 'node:timers/promises';
-import { affectedScope, authorized, buildWithRepair, command, ensureFingerprint, latestQueue,
+import { affectedScope, authorized, buildWithRepair, captureWithFingerprint, command, ensureFingerprint, latestQueue,
   mappingPaths, readRequest, recordAttempt, repositoryRuntime, resumeState, snapshot, stable, takeSlot, uiPath, waitForEmulator } from './core.mjs';
 
 const fileId = '224cc244-cd3c-4c88-aea0-532883240284';
 const id = 'd075f952-0d8c-4b6e-9b29-10373c7a4dc5';
-const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/Z7sAAAAASUVORK5CYII=';
+const chunk = (type, data) => {
+  const result = Buffer.alloc(data.length + 12);
+  result.writeUInt32BE(data.length);
+  result.write(type, 4);
+  data.copy(result, 8);
+  result.writeUInt32BE(crc32(result.subarray(4, -4)), result.length - 4);
+  return result;
+};
+const header = Buffer.from('00000001000000010806000000', 'hex');
+const makePng = data => Buffer.concat([Buffer.from('89504e470d0a1a0a', 'hex'), chunk('IHDR', header),
+  chunk('IDAT', data), chunk('IEND', Buffer.alloc(0))]);
+const png = makePng(deflateSync(Buffer.from([0, 0, 0, 0, 255]))).toString('base64');
 const path = 'app/src/main/java/com/example/androidstockapp/PulseTheme.kt';
 const mapping = { [fileId]: { [id]: [path] } };
 const sample = () => ({ fileId, tokens: [{ name: 'Pulse', active: true, tokens: [{ name: 'Surface', type: 'color', value: '#111111' }] }],
@@ -172,4 +184,46 @@ test('preview waits for Android boot even when the emulator console responds', a
   await waitForEmulator(run, 'adb', ['-s', 'emulator-5554']);
   assert.equal(bootChecks, 2, 'Installation must wait past the responsive-but-booting state');
   await assert.rejects(waitForEmulator(async () => ({ ok: false }), 'adb', [], AbortSignal.abort()), /abort/i);
+});
+
+
+test('rejects truncated, CRC-corrupt and invalid compressed PNG data', () => {
+  const valid = Buffer.from(png, 'base64');
+  const corrupt = Buffer.from(valid);
+  corrupt[45] ^= 1;
+  for (const bytes of [valid.subarray(0, -1), corrupt, makePng(Buffer.from('invalid'))]) {
+    const value = sample();
+    value.boards[0].png = bytes.toString('base64');
+    assert.throws(() => snapshot(value, mapping), /Invalid PNG/);
+  }
+});
+
+test('rejects malformed palettes and non-ASCII chunk names', () => {
+  const valid = Buffer.from(png, 'base64');
+  const palette = chunk('PLTE', Buffer.from([0, 0, 0]));
+  const highBit = chunk('tEXt', Buffer.alloc(0));
+  highBit[4] |= 0x80;
+  highBit.writeUInt32BE(crc32(highBit.subarray(4, -4)), highBit.length - 4);
+  const withChunks = (...chunks) => Buffer.concat([valid.subarray(0, 33), ...chunks, valid.subarray(33)]);
+  const accepted = sample();
+  accepted.boards[0].png = withChunks(palette).toString('base64');
+  assert.ok(snapshot(accepted, mapping).hash);
+  for (const bytes of [withChunks(chunk('PLTE', Buffer.alloc(0))),
+    withChunks(chunk('PLTE', Buffer.alloc(4))), withChunks(chunk('PLTE', Buffer.alloc(771))),
+    withChunks(palette, palette), withChunks(highBit)]) {
+    const value = sample();
+    value.boards[0].png = bytes.toString('base64');
+    assert.throws(() => snapshot(value, mapping), /Invalid PNG/);
+  }
+});
+
+test('manual edits during emulator wait or capture prevent completion', async () => {
+  for (const stage of ['wait', 'capture']) {
+    let fingerprint = 'built', captured = false;
+    const check = async () => ensureFingerprint(fingerprint, 'built');
+    await assert.rejects(captureWithFingerprint(check,
+      async () => { if (stage === 'wait') fingerprint = 'edited'; },
+      async () => { captured = true; if (stage === 'capture') fingerprint = 'edited'; }), /manual-worktree-conflict/);
+    assert.equal(captured, stage === 'capture');
+  }
 });

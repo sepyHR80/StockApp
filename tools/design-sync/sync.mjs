@@ -4,7 +4,7 @@ import { constants } from 'node:fs';
 import { chmod, copyFile, lstat, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { affectedScope, authorized, bodyLimit, buildWithRepair, command, digest, ensureFingerprint, flexFields,
+import { affectedScope, authorized, bodyLimit, buildWithRepair, captureWithFingerprint, command, digest, ensureFingerprint, flexFields,
   latestQueue, mappingPaths, object, readRequest, recordAttempt, repositoryRuntime, resumeState, shapeFields, snapshot, stable, waitForEmulator, writeJson } from './core.mjs';
 
 const repo = fileURLToPath(new URL('../../', import.meta.url));
@@ -209,13 +209,18 @@ async function main() {
     state.stage = 'awaiting-emulator';
     await persist();
     log('awaiting-emulator');
-    await waitForEmulator(run, adbExecutable, adb, abort.signal);
-    const apk = join(worktree, 'app/build/outputs/apk/debug/app-debug.apk');
-    if (!(await run(adbExecutable, [...adb, 'install', '-r', apk])).ok) throw new Error('install-failed');
-    if (!(await run(adbExecutable, [...adb, 'shell', 'am', 'start', '-W', '-n',
-      'com.example.androidstockapp/.MainActivity'])).ok) throw new Error('launch-failed');
-    const screen = await run(adbExecutable, [...adb, 'exec-out', 'screencap', '-p'], { binary: true });
-    if (!screen.ok || screen.output.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') throw new Error('screenshot-failed');
+    const screen = await captureWithFingerprint(
+      async () => ensureFingerprint((await workingTree(worktree, managed, state.base)).hash, before.hash),
+      () => waitForEmulator(run, adbExecutable, adb, abort.signal),
+      async () => {
+        const apk = join(worktree, 'app/build/outputs/apk/debug/app-debug.apk');
+        if (!(await run(adbExecutable, [...adb, 'install', '-r', apk])).ok) throw new Error('install-failed');
+        if (!(await run(adbExecutable, [...adb, 'shell', 'am', 'start', '-W', '-n',
+          'com.example.androidstockapp/.MainActivity'])).ok) throw new Error('launch-failed');
+        const result = await run(adbExecutable, [...adb, 'exec-out', 'screencap', '-p'], { binary: true });
+        if (!result.ok || result.output.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') throw new Error('screenshot-failed');
+        return result;
+      });
     await writeFile(join(directory, 'emulator-launch.png'), screen.output, { mode: 0o400, flag: 'wx' });
     state.phase = 'ready';
     state.fingerprint = before.hash;

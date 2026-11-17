@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import { readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
+import { crc32, inflateSync } from 'node:zlib';
 
 export const bodyLimit = 24 * 1024 * 1024;
 export const uuid = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
@@ -86,6 +87,54 @@ export function affectedScope(changedIds, mapping) {
   return { boards: [...boards], paths: [...paths] };
 }
 
+function validPng(png) {
+  if (png.length < 33 || png.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') return false;
+  let offset = 8, width, height, channels, sawData = false, dataEnded = false, ended = false, sawPalette = false;
+  const data = [];
+  while (offset + 12 <= png.length) {
+    const length = png.readUInt32BE(offset);
+    const end = offset + 12 + length;
+    if (end > png.length) return false;
+    const type = png.toString('latin1', offset + 4, offset + 8);
+    if (!/^[A-Za-z]{4}$/.test(type) || crc32(png.subarray(offset + 4, end - 4)) !== png.readUInt32BE(end - 4)) return false;
+    const chunk = png.subarray(offset + 8, end - 4);
+    if (offset === 8) {
+      if (type !== 'IHDR' || length !== 13) return false;
+      width = chunk.readUInt32BE(0); height = chunk.readUInt32BE(4);
+      // shortcut: accept only 8-bit noninterlaced RGB/RGBA exports up to 32 MiB decoded; expand if Penpot changes its export format.
+      if (!width || !height || width > 8192 || height > 8192 || chunk[8] !== 8
+          || ![2, 6].includes(chunk[9]) || chunk[10] || chunk[11] || chunk[12]) return false;
+      channels = chunk[9] === 2 ? 3 : 4;
+      if ((width * channels + 1) * height > 32 * 1024 * 1024) return false;
+    } else if (type === 'IDAT') {
+      if (dataEnded) return false;
+      sawData = true;
+      data.push(chunk);
+    } else {
+      if (sawData) dataEnded = true;
+      if (type === 'IEND') {
+        if (length || !sawData || end !== png.length) return false;
+        ended = true;
+        break;
+      }
+      if (type === 'PLTE') {
+        if (sawPalette || sawData || !length || length > 768 || length % 3) return false;
+        sawPalette = true;
+      } else if (type === 'IHDR' || type[0] === type[0].toUpperCase()) return false;
+    }
+    offset = end;
+  }
+  if (!ended) return false;
+  try {
+    const compressed = Buffer.concat(data);
+    const decoded = inflateSync(compressed, { maxOutputLength: 32 * 1024 * 1024, info: true });
+    const row = width * channels + 1;
+    if (decoded.engine.bytesWritten !== compressed.length || decoded.buffer.length !== row * height) return false;
+    for (let y = 0; y < height; y++) if (decoded.buffer[y * row] > 4) return false;
+    return true;
+  } catch { return false; }
+}
+
 export function snapshot(value, files) {
   if (!only(value, ['fileId', 'tokens', 'boards']) || !uuid.test(value.fileId) || !Object.hasOwn(files, value.fileId) || !validTokens(value.tokens)
       || !Array.isArray(value.boards)) throw new Error('Invalid snapshot');
@@ -98,10 +147,7 @@ export function snapshot(value, files) {
         || !validTree(board.tree, ids) || board.tree.type !== 'board' || board.id !== board.tree.id
         || typeof board.png !== 'string' || board.png.length > 8 * 1024 * 1024) throw new Error('Invalid board');
     const png = Buffer.from(board.png, 'base64');
-    if (png.toString('base64') !== board.png || png.length < 33
-        || png.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a'
-        || png.toString('ascii', 12, 16) !== 'IHDR'
-        || [png.readUInt32BE(16), png.readUInt32BE(20)].some(size => size < 1 || size > 8192)) throw new Error('Invalid PNG');
+    if (png.toString('base64') !== board.png || !validPng(png)) throw new Error('Invalid PNG');
     board.png = png;
   }
   boards.sort((a, b) => a.id.localeCompare(b.id));
@@ -187,6 +233,14 @@ export async function recordAttempt(ledger, now) {
 
 export function ensureFingerprint(actual, expected) {
   if (actual !== expected) throw new Error('manual-worktree-conflict');
+}
+
+export async function captureWithFingerprint(check, wait, capture) {
+  await wait();
+  await check();
+  const result = await capture();
+  await check();
+  return result;
 }
 
 export function resumeState(state) {
